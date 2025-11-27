@@ -13,7 +13,10 @@ from django.db.models import Avg
 
 def home(request):
     # Newest Update
-    newest_qs = Story.objects.all().order_by('-updated_at')
+    # newest_qs = Story.objects.all().order_by('-updated_at')
+    newest_qs = Story.objects.all().order_by('-updated_at') \
+        .prefetch_related('genres') \
+        .annotate(avg_rating=Avg('reviews__rating'))
     newest_paginator = Paginator(newest_qs, 4)
     newest_page_num = request.GET.get('newest_page') or 1
     newest_page_obj = newest_paginator.get_page(newest_page_num)
@@ -320,7 +323,7 @@ def review_edit(request, review_id):
     review = get_object_or_404(Review, id=review_id)
     if review.author != request.user:
         return HttpResponseForbidden()
-    
+
     if request.method == "POST":
         form = ReviewForm(request.POST, instance=review)
         if form.is_valid():
@@ -328,7 +331,7 @@ def review_edit(request, review_id):
             return redirect('story_detail', slug=review.story.slug)
     else:
         form = ReviewForm(instance=review)
-    
+
     return render(request, 'dreambooks/review_edit.html', {'form': form, 'review': review})
 
 @login_required
@@ -336,7 +339,7 @@ def review_delete(request, review_id):
     review = get_object_or_404(Review, id=review_id)
     if review.author != request.user and not request.user.is_staff:
         return HttpResponseForbidden()
-    
+
     story_slug = review.story.slug
     review.delete()
     return redirect('story_detail', slug=story_slug)
@@ -446,7 +449,7 @@ def contact_list_create(request):
         if message_text:
             ContactMessage.objects.create(user=request.user, message=message_text)
         return redirect("contact")
-    
+
     if request.user.is_staff:
         messages = ContactMessage.objects.all().order_by('-created_at')
     else:
