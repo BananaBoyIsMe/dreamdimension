@@ -1,11 +1,11 @@
 
 :root{
-  --bg:#082814;        /* deep forest */
-  --card:#0f3423;      /* card background */
-  --muted:#bcd8c4;     /* soft sage for metadata / text-muted */
-  --accent:#46c67c;    /* bright leaf green */
-  --accent-2:#9be7b7;  /* mint highlight */
-  --text:#f6fff8;      /* warm off-white text */
+  --bg:#082814;        
+  --card:#0f3423;      
+  --muted:#bcd8c4;    
+  --accent:#46c67c;    
+  --accent-2:#9be7b7;
+  --text:#f6fff8;     
   --container:1100px;
   --radius:10px;
   --gap:16px;
@@ -31,17 +31,17 @@ body {
 }
 
 .page-wrapper {
-  flex: 1; /* content area grows to take available space */
-  display: flex;
-  flex-direction: column;
+  /*flex: 1;*/
+  /*display: flex;*/
+  /*flex-direction: column;*/
+  align-items: center;
+  justify-content: center;
 }
-
 
 .container {
   max-width: var(--container);
   margin: 0 auto;
   padding: 24px;
-  flex: 1; /* make sure container grows if needed */
 }
 
 /* header */
