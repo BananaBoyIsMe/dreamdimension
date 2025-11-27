@@ -1,0 +1,15 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}Edit Contact Message — Dream Dimension{% endblock %}
+
+{% block content %}
+<section style="max-width:600px; margin:20px auto; padding:16px; background:rgba(0,0,0,0.4); border-radius:8px;">
+    <h2>Edit Message</h2>
+
+    <form method="post" style="display:flex; flex-direction:column; gap:12px;">
+        {% csrf_token %}
+        <textarea name="message" rows="4" style="padding:8px 10px; border-radius:6px; border:none; background:rgba(255,255,255,0.1); color:white;">{{ contact.message }}</textarea>
+        <button type="submit" class="btn-primary" style="align-self:flex-start;">Save</button>
+        <a href="{% url 'contact' %}" class="btn-ghost">Cancel</a>
+    </form>
+</section>
+{% endblock %}

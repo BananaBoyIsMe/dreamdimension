@@ -1,0 +1,116 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}{{ profile_user.username }} — Profile{% endblock %}
+
+{% block content %}
+<style>
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.profile-avatar {
+  width:64px;
+  height:64px;
+  font-size:1.6rem;
+  /* Use same colors as header */
+  background: linear-gradient(180deg, var(--accent), #2fa361);
+  color: #063017;
+  box-shadow: 0 4px 10px rgba(10,40,20,0.28);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  font-weight:700;
+}
+
+</style>
+
+<section class="profile-page">
+
+  <!-- Profile header -->
+    <div class="profile-header">
+        <div class="profile-avatar">{{ profile_user.username|first|upper }}</div>
+
+        <div>
+        <h2 style="margin:0;">{{ profile_user.username }}</h2>
+        {% if profile_user.email %}
+            <p class="muted" style="margin:4px 0 0;">{{ profile_user.email }}</p>
+        {% endif %}
+        </div>
+    </div>
+
+
+  <!-- Profile actions -->
+  {% if user == profile_user %}
+  <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="{% url 'account_update' %}" class="btn-ghost">Update Account</a>
+      <a href="{% url 'password_change' %}" class="btn-ghost">Change Password</a>
+      <a href="{% url 'account_delete' %}" class="btn-ghost" style="color:#ff6b6b;">Delete Account</a>
+  </div>
+  {% endif %}
+
+  <!-- Stories -->
+  <section class="profile-stories" style="margin-bottom:32px;">
+    <h3>Stories by {{ profile_user.username }}</h3>
+    <ul>
+      {% for story in stories %}
+        <li>
+          <a href="{% url 'story_detail' story.slug %}">{{ story.title }}</a>
+          <span class="muted">— {{ story.created_at|date:"Y-m-d" }}</span>
+        </li>
+      {% empty %}
+        <li class="muted">No stories yet.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <!-- Reviews -->
+  <section class="profile-reviews">
+    <h3>Reviews by {{ profile_user.username }}</h3>
+
+    <ul style="list-style:none; padding:0;">
+      {% for review in reviews %}
+      <li style="background:var(--card); padding:12px; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,0.3); margin-bottom:12px;">
+
+          <!-- Story link -->
+          <p style="margin:0 0 4px;">
+            On <a href="{% url 'story_detail' review.story.slug %}" style="color:var(--accent-2);">
+              {{ review.story.title }}
+            </a>
+          </p>
+
+          <!-- Rating -->
+          <p style="margin:0 0 4px; color:#46c67c;">
+            {% for i in "12345" %}
+              {% if forloop.counter <= review.rating %}
+                ★
+              {% else %}
+                ☆
+              {% endif %}
+            {% endfor %}
+          </p>
+
+          <!-- Review text -->
+          <p style="margin:0 0 6px;">{{ review.comment }}</p>
+
+          <small class="muted">{{ review.created_at|date:"M d, Y" }}</small>
+
+          {% if user == review.author or user.is_staff %}
+          <div style="margin-top:6px; display:flex; gap:8px;">
+              <a href="{% url 'review_edit' review.id %}" class="btn-ghost" style="padding:4px 8px; font-size:0.8rem;">Edit</a>
+              <a href="{% url 'review_delete' review.id %}" class="btn-ghost" style="padding:4px 8px; font-size:0.8rem; color:#ff6b6b;">Delete</a>
+          </div>
+          {% endif %}
+
+      </li>
+      {% empty %}
+        <li class="muted">No reviews yet.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+</section>
+{% endblock %}

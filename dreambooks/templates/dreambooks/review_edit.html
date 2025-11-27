@@ -1,0 +1,22 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}Edit Review — Dream Dimension{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card">
+    <header class="auth-header">
+      <h2>Edit your review</h2>
+      <p class="muted">Update your rating or comment.</p>
+    </header>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div class="form-actions">
+        <button class="btn-primary" type="submit">Save Changes</button>
+        <a class="btn-ghost" href="{% url 'story_detail' review.story.slug %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

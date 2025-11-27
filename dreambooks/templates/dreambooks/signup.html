@@ -1,0 +1,81 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}Sign up — Dream Dimension{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card">
+    <header class="auth-header">
+      <h2>Create your account</h2>
+      <p class="muted">Join the forest — publish and explore stories.</p>
+    </header>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="form-errors">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {% for field in form.visible_fields %}
+        {% if field.name == "password1" %}
+          <div class="form-row pw-field{% if field.errors %} has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <div class="pw-input-wrap">
+              {{ field }}
+              <button type="button" class="pw-toggle" aria-label="Show password">Show</button>
+            </div>
+            {% for err in field.errors %}
+              <p class="field-error">{{ err }}</p>
+            {% endfor %}
+            <div class="pw-meter" aria-hidden="true"><span class="pw-bar"></span></div>
+          </div>
+        {% else %}
+          <div class="form-row{% if field.errors %} has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
+            {% for err in field.errors %}
+              <p class="field-error">{{ err }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      <div class="form-actions">
+        <button class="btn-primary" type="submit">Create account</button>
+        <a class="btn-ghost" href="{% url 'login' %}">Have an account? Log in</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+(() => {
+  const pw = document.querySelector('[name="password1"]');
+  const toggle = document.querySelector('.pw-toggle');
+  const meterBar = document.querySelector('.pw-bar');
+  if (!pw) return;
+
+  function scorePassword(s){
+    let score=0;
+    if(!s) return score;
+    if(s.length>=8) score++;
+    if(/[A-Z]/.test(s)) score++;
+    if(/[0-9]/.test(s)) score++;
+    if(/[^A-Za-z0-9]/.test(s)) score++;
+    return score;
+  }
+
+  pw.addEventListener('input', () => {
+    const s = pw.value;
+    const score = scorePassword(s);
+    meterBar.style.width = ((score/4)*100) + '%';
+    meterBar.style.background = score >= 3 ? 'var(--accent)' : 'orange';
+  });
+
+  toggle && toggle.addEventListener('click', () => {
+    if (pw.type === 'password') { pw.type = 'text'; toggle.textContent = 'Hide'; }
+    else { pw.type = 'password'; toggle.textContent = 'Show'; }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}{{ chapter.title }} — {{ story.title }}{% endblock %}
+
+{% block content %}
+<style>
+/* Chapter page column */
+.chapter-page {
+    position: relative;
+    z-index: 1; /* above leaves */
+    background: rgba(0, 30, 0, 0.9); /* semi-transparent dark column */
+    padding: 24px;
+    border-radius: 12px;
+    max-width: 900px;
+    margin: 0 auto 40px;
+    color: #dce7dc; /* slightly dimmed text */
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.chapter-page h1 {
+    color: #9ae6b8;
+    margin-bottom: 6px;
+}
+
+.chapter-page a {
+    color: #9ae6b8;
+    text-decoration: none;
+}
+
+.chapter-page a:hover {
+    text-decoration: underline;
+}
+
+.btn-primary {
+    font-size: 0.9rem;
+    padding: 6px 12px;
+}
+
+.muted {
+    color: #a0a0a0;
+    font-size: 0.85rem;
+}
+
+/* Chapter content */
+.chapter-body {
+    line-height: 1.65;
+    white-space: pre-wrap;
+    margin-top: 16px;
+    font-size: 1rem;
+}
+</style>
+
+<section class="chapter-page">
+  <a href="{{ back_url }}" class="btn-ghost" style="margin-bottom:12px;display:inline-block">← Back to story</a>
+
+  <header style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px">
+    <div style="flex:1">
+      <h1>{{ chapter.title }}</h1>
+      <p class="muted">
+        {{ story.title }} · by <a href="{% url 'profile' story.author.username %}">{{ story.author.username }}</a>
+        {% if chapter.created_at %} • {{ chapter.created_at|date:"M d, Y" }}{% endif %}
+      </p>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;">
+        {% if prev_chapter %}
+            <a class="btn-primary" href="{% url 'chapter_detail' story.slug prev_chapter.pk %}{% if request.GET.page %}?page={{ request.GET.page }}{% endif %}">← Prev</a>
+        {% endif %}
+
+        <a class="btn-primary" href="{% url 'story_detail' story.slug %}{% if request.GET.page %}?page={{ request.GET.page }}{% endif %}">Chapters</a>
+
+        {% if next_chapter %}
+            <a class="btn-primary" href="{% url 'chapter_detail' story.slug next_chapter.pk %}{% if request.GET.page %}?page={{ request.GET.page }}{% endif %}">Next →</a>
+        {% endif %}
+    </div>
+  </header>
+
+  <article class="chapter-body">
+    {% if chapter.content %}
+      {{ chapter.content|linebreaks }}
+    {% else %}
+      <p class="muted">No content available for this chapter.</p>
+    {% endif %}
+  </article>
+</section>
+{% endblock %}

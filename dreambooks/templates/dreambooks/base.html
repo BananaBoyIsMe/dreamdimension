@@ -1,0 +1,203 @@
+{% load static %}
+
+<style>
+.leaf-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: -1; /* behind everything */
+}
+
+.leaf {
+    position: absolute;
+    width: var(--size, 40px);
+    height: var(--size, 40px);
+    background-image: url('/static/images/leaf.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: var(--opacity, 0.4);
+    transform: rotate(var(--start-rot, 0deg));
+    animation: fall var(--duration, 15s) linear forwards;
+}
+
+body {
+    position: relative;
+    min-height: 100vh;
+    background-image: url("{% static 'images/bg.png' %}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+/* Overlay to darken the background */
+body::before {
+    content: "";
+    position: fixed;       /* fixed so it covers viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 22, 0, 0.65); /* black with 40% opacity */
+    z-index: -1;           /* behind all content */
+    pointer-events: none;  /* click-through */
+}
+
+@keyframes fall {
+    0% {
+        transform: translate(var(--start-x, 0vw), -50px) rotate(var(--start-rot, 0deg));
+    }
+    100% {
+        transform: translate(var(--end-x, 0vw), 110vh) rotate(calc(var(--start-rot, 0deg) + var(--rot-deg, 360deg)));
+    }
+}
+
+.nav .logout-form {
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+
+.nav .logout-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7); /* slightly dimmer text */
+    font: inherit;
+    cursor: pointer;
+    vertical-align: middle; /* aligns with text links */
+    padding: 0;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.nav .logout-btn:hover {
+    color: #fff; /* brighten on hover */
+}
+</style>
+
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Dream Dimension{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'dreambooks/style.css' %}">
+</head>
+
+<body>
+
+<div class="leaf-container" id="leaf-bg"></div>
+
+<div class="page-wrapper">
+  <header class="site-header">
+    <div class="container header-inner">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <img src="{% static 'images/logo.png' %}"
+          alt="Logo"
+          style="height:60px; width:auto; object-fit:contain;
+                  filter: saturate(2) contrast(1) brightness(0.9) hue-rotate(385deg);">
+        
+        <a class="brand" href="{% url 'home' %}"
+          style="text-decoration:none; color:white; font-size:1.4rem; font-weight:600;">
+            Dream Dimension
+        </a>
+    </div>
+
+
+      <form class="search" action="{% url 'story_list' %}" method="get">
+        <input name="q" placeholder="Search stories..." aria-label="Search">
+        <button type="submit">Search</button>
+      </form>
+
+      <nav class="nav">
+        <a href="{% url 'home' %}">Home</a>
+
+        {% if user.is_authenticated %}
+          <a href="{% url 'story_create' %}">Create story</a>
+          <a class="account-link" href="{% url 'profile' user.username %}">
+            <span class="avatar">{{ user.username|first|upper }}</span>
+            {{ user.username }}
+          </a>
+          <br>
+          <form action="{% url 'logout' %}" method="post" style="display:inline; margin:0; padding:0;">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn" style="vertical-align:middle;">Log out</button>
+        </form>
+        {% else %}
+          <a href="{% url 'signup' %}">Sign up</a>
+          <a href="{% url 'login' %}">Log in</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+  <div class="container" style="display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap;">
+    <small>© {% now "Y" %} Dream Dimension</small>
+    <span>|</span>
+    <a href="{% url 'contact' %}" style="color:#9ae6b8; font-size:0.9rem;">Contact Us</a>
+    <span>|</span>
+    <a href="{% url 'about' %}" style="color:#9ae6b8; font-size:0.9rem;">About Us</a>
+  </div>
+</footer>
+
+</div>
+
+</body>
+</html>
+
+
+<script>
+(function() {
+    const container = document.getElementById("leaf-bg");
+
+    function spawnLeaf() {
+        const leaf = document.createElement("div");
+        leaf.classList.add("leaf");
+
+        // random horizontal start
+        const startX = Math.random() * 100;
+        const endX = startX + (Math.random() * 20 - 10); // drift
+        const duration = 10 + Math.random() * 20; // seconds
+        const size = 30 + Math.random() * 50; // 20px - 60px
+        const opacity = 0.3 + Math.random() * 0.4; // 0.3 - 0.7
+
+        // random starting rotation
+        const startRot = Math.random() * 360;
+
+        // random rotation direction (cw or ccw)
+        const rotDeg = (Math.random() < 0.5 ? 1 : -1) * (180 + Math.random() * 180);
+
+        leaf.style.setProperty("--start-x", startX + "vw");
+        leaf.style.setProperty("--end-x", endX + "vw");
+        leaf.style.setProperty("--duration", duration + "s");
+        leaf.style.setProperty("--size", size + "px");
+        leaf.style.setProperty("--opacity", opacity);
+        leaf.style.setProperty("--start-rot", startRot + "deg");
+        leaf.style.setProperty("--rot-deg", rotDeg + "deg");
+
+        container.appendChild(leaf);
+
+        // remove after animation
+        setTimeout(() => leaf.remove(), duration * 1000);
+    }
+
+    function loop() {
+        spawnLeaf();
+        const next = 400 + Math.random() * 800;
+        setTimeout(loop, next);
+    }
+
+    loop();
+})();
+</script>

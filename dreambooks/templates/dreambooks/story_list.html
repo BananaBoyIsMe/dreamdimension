@@ -1,0 +1,101 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}Search Results - Dream Dimension{% endblock %}
+
+{% block content %}
+<h1>Search Results{% if query %} for "{{ query }}"{% endif %}</h1>
+
+<form method="get" style="
+    margin-bottom:20px; 
+    display:flex; 
+    gap:12px; 
+    flex-wrap:wrap; 
+    align-items:center;
+    background:#0e3423; 
+    padding:12px; 
+    border-radius:8px;
+">
+    <select name="genre" style="
+        padding:8px 12px; 
+        border-radius:6px; 
+        border:1px solid rgba(255,255,255,0.2); 
+        background: rgba(0,0,0,0.12); 
+        color: var(--text);
+    ">
+        <option value="">All genres</option>
+        {% for g in all_genres %}
+            <option value="{{ g.name }}" {% if selected_genre == g.name %}selected{% endif %}>{{ g.name }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="order" style="
+        padding:8px 12px; 
+        border-radius:6px; 
+        border:1px solid rgba(255,255,255,0.2); 
+        background: rgba(0,0,0,0.12); 
+        color: var(--text);
+    ">
+        <option value="newest" {% if selected_order == 'newest' %}selected{% endif %}>Newest</option>
+        <option value="oldest" {% if selected_order == 'oldest' %}selected{% endif %}>Oldest</option>
+        <option value="rating" {% if selected_order == 'rating' %}selected{% endif %}>Highest Rated</option>
+    </select>
+
+    <button type="submit" style="
+        padding:8px 16px; 
+        border-radius:6px; 
+        border:none; 
+        background:#9ae6b8; 
+        color:#065f46; 
+        font-weight:600; 
+        cursor:pointer;
+        transition: background 0.2s ease;
+    " onmouseover="this.style.background='#7fd59f'" onmouseout="this.style.background='#9ae6b8'">
+        Apply
+    </button>
+</form>
+
+{% if stories %}
+    <ul style="list-style:none; padding:0; margin:0;">
+        {% for story in stories %}
+        <li style="margin-bottom:16px; padding:12px; background:var(--card); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+            <a href="{% url 'story_detail' story.slug %}" style="text-decoration:none; color:inherit; display:flex; gap:12px; align-items:flex-start;">
+                {% if story.cover_image %}
+                    <img src="{{ story.cover_image.url }}" alt="{{ story.title }}" style="width:100px; height:80px; object-fit:cover; border-radius:6px;">
+                {% endif %}
+                <div style="flex:1">
+                    <h2 style="margin:0; font-size:1.2rem;">{{ story.title }}</h2>
+                    <p style="margin:4px 0 0; color:var(--muted); font-size:0.9rem;">
+                        by {{ story.author.username }} • {{ story.created_at|date:"M d, Y" }}
+                    </p>
+                    
+                    <!-- Average rating -->
+                    <p style="margin:4px 0 0; font-size:0.9rem; color:#46c67c;">
+                        {% with story.avg_rating|default:0 as rating %}
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= rating %}
+                                    ★
+                                {% else %}
+                                    ☆
+                                {% endif %}
+                            {% endfor %}
+                            ({{ rating|floatformat:1 }})
+                        {% endwith %}
+                    </p>
+
+                    <!-- Genres -->
+                    {% if story.genres.exists %}
+                        <p style="margin:4px 0 0;">
+                            {% for g in story.genres.all %}
+                                <span style="background:#9ae6b8; color:#065f46; padding:2px 6px; border-radius:4px; font-size:0.8rem; margin-right:4px;">{{ g.name }}</span>
+                            {% endfor %}
+                        </p>
+                    {% endif %}
+                </div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No stories found{% if query %} for "{{ query }}"{% endif %}.</p>
+{% endif %}
+
+{% endblock %}

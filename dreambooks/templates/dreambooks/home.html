@@ -1,0 +1,288 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}Home — Dream Dimension{% endblock %}
+
+{% block content %}
+
+<style>
+/* carousel (home) */
+.carousel-wrapper{
+  overflow:hidden;
+  width:100%;
+  margin:0;
+  position:relative;
+}
+.carousel-track{
+  display:flex;
+  transition:transform .42s cubic-bezier(.22,.9,.32,1);
+  will-change:transform;
+  width:100%;
+}
+.carousel-page{
+  flex:0 0 100%;
+  padding:0;
+  box-sizing:border-box;
+}
+/* ensure the inner card-grid shows up to 4 cards (grid handles it) */
+.carousel-page .card-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:16px;
+  padding:0;
+  margin:0;
+}
+/* small screens — still show responsive cards */
+@media (max-width:720px){
+  .carousel-page .card-grid{grid-template-columns:repeat(1,1fr)}
+}
+
+/* subtle hide of overflow on page edges */
+.carousel-wrapper .card{margin:8px 6px}
+
+.card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit; /* keep text color from card */
+}
+.card-link .card {
+  transition: transform 0.2s;
+}
+.card-link:hover .card {
+  transform: translateY(-4px);
+}
+
+</style>
+
+{% if not user.is_authenticated %}
+<section class="hero">
+  <div class="hero-inner">
+    <h1>Discover new worlds, one chapter at a time</h1>
+    <p>Publish, read, and discuss original fiction - featured chapters, curated lists, and powerful search.</p>
+    <div class="hero-cta">
+      <a class="btn-primary" href="{% url 'story_list' %}">Browse stories</a>
+      <a class="btn-ghost" href="{% url 'signup' %}">Create an account</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+
+
+
+
+<section class="stories-section">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <h2 style="margin:0">Newest Updated Stories</h2>
+    <div class="muted">Page {{ newest_page_obj.number }} / {{ newest_paginator.num_pages }}</div>
+  </div>
+
+  <div class="card-grid">
+  {% for story in newest_stories %}
+    <article class="card">
+      <a href="{% url 'story_detail' story.slug %}?newest_page={{ newest_page_obj.number }}" class="card-link">
+        {% if story.cover_image %}
+          <img src="{{ story.cover_image.url }}" alt="{{ story.title }}" class="card-cover">
+        {% endif %}
+        <div class="card-body">
+            <h3 class="card-title">{{ story.title }}</h3>
+            {% if story.genres.all %}
+                <p>
+                {% for g in story.genres.all|slice:":3" %}
+                    <span class="tag">{{ g.name }}</span>
+                {% endfor %}
+                {% if story.genres.count > 3 %}
+                    +{{ story.genres.count|add:"-3" }}
+                {% endif %}
+                </p>
+            {% endif %}
+            <p class="meta">by <a href="{% url 'profile' story.author.username %}" style="color: #9ae6b8;">{{ story.author.username }}</a> • {{ story.created_at|date:"M d, Y" }}</p>
+            <p class="excerpt">{{ story.description|truncatechars:140 }}</p>
+        </div>
+        <p class="rating" style="color:#46c67c;">
+            {% with story.avg_rating|default:0 as rating %}
+    {% for i in "12345" %}
+        {% if forloop.counter <= rating %}
+            ★
+        {% else %}
+            ☆
+        {% endif %}
+    {% endfor %}
+{% endwith %}
+        </p>
+      </a>
+    </article>
+  {% empty %}
+    <p class="muted">No stories yet.</p>
+  {% endfor %}
+</div>
+
+<nav class="pagination" aria-label="Latest Stories Pagination" style="margin-top:18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    {% if latest_page_obj.has_previous %}
+      <a class="btn-ghost" href="?latest_page={{ latest_page_obj.previous_page_number }}">‹ Prev</a>
+    {% endif %}
+
+    {% for num in latest_paginator.page_range %}
+      {% if num == latest_page_obj.number %}
+        <span class="btn-primary" style="padding:6px 10px;border-radius:6px">{{ num }}</span>
+      {% else %}
+        <a class="btn-ghost" href="?latest_page={{ num }}">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if latest_page_obj.has_next %}
+      <a class="btn-ghost" href="?latest_page={{ latest_page_obj.next_page_number }}">Next ›</a>
+    {% endif %}
+</nav>
+</section>
+
+
+
+
+<br>
+<br>
+
+<section class="stories-section">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <h2 style="margin:0">Top Rated Stories</h2>
+    <div class="muted">Page {{ rating_page_obj.number }} / {{ rating_paginator.num_pages }}</div>
+  </div>
+
+  <div class="card-grid">
+  {% for story in rating_stories %}
+    <article class="card">
+      <a href="{% url 'story_detail' story.slug %}?rating_page={{ rating_page_obj.number }}" class="card-link">
+        {% if story.cover_image %}
+          <img src="{{ story.cover_image.url }}" alt="{{ story.title }}" class="card-cover">
+        {% endif %}
+        <div class="card-body">
+            <h3 class="card-title">{{ story.title }}</h3>
+            {% if story.genres.all %}
+                <p>
+                {% for g in story.genres.all|slice:":3" %}
+                    <span class="tag">{{ g.name }}</span>
+                {% endfor %}
+                {% if story.genres.count > 3 %}
+                    +{{ story.genres.count|add:"-3" }}
+                {% endif %}
+                </p>
+            {% endif %}
+            <p class="meta">by <a href="{% url 'profile' story.author.username %}" style="color: #9ae6b8;">{{ story.author.username }}</a> • {{ story.created_at|date:"M d, Y" }}</p>
+            <p class="excerpt">{{ story.description|truncatechars:140 }}</p>
+        </div>
+        <p class="rating" style="color:#46c67c;">
+            {% with story.avg_rating|default:0 as rating %}
+    {% for i in "12345" %}
+        {% if forloop.counter <= rating %}
+            ★
+        {% else %}
+            ☆
+        {% endif %}
+    {% endfor %}
+{% endwith %}
+        </p>
+      </a>
+    </article>
+  {% empty %}
+    <p class="muted">No stories yet.</p>
+  {% endfor %}
+</div>
+
+<nav class="pagination" aria-label="Top Rated Pagination" style="margin-top:18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    {% if rating_page_obj.has_previous %}
+      <a class="btn-ghost" href="?rating_page={{ rating_page_obj.previous_page_number }}">‹ Prev</a>
+    {% endif %}
+
+    {% for num in rating_paginator.page_range %}
+      {% if num == rating_page_obj.number %}
+        <span class="btn-primary" style="padding:6px 10px;border-radius:6px">{{ num }}</span>
+      {% else %}
+        <a class="btn-ghost" href="?rating_page={{ num }}">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if rating_page_obj.has_next %}
+      <a class="btn-ghost" href="?rating_page={{ rating_page_obj.next_page_number }}">Next ›</a>
+    {% endif %}
+</nav>
+</section>
+
+
+
+
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+<section class="stories-section">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <h2 style="margin:0">Newest Published Stories</h2>
+    <div class="muted">Page {{ latest_page_obj.number }} / {{ latest_paginator.num_pages }}</div>
+  </div>
+
+  <div class="card-grid">
+  {% for story in latest_stories %}
+    <article class="card">
+      <a href="{% url 'story_detail' story.slug %}?latest_page={{ latest_page_obj.number }}" class="card-link">
+        {% if story.cover_image %}
+          <img src="{{ story.cover_image.url }}" alt="{{ story.title }}" class="card-cover">
+        {% endif %}
+        <div class="card-body">
+            <h3 class="card-title">{{ story.title }}</h3>
+            {% if story.genres.all %}
+                <p>
+                {% for g in story.genres.all|slice:":3" %}
+                    <span class="tag">{{ g.name }}</span>
+                {% endfor %}
+                {% if story.genres.count > 3 %}
+                    +{{ story.genres.count|add:"-3" }}
+                {% endif %}
+                </p>
+            {% endif %}
+            <p class="meta">by <a href="{% url 'profile' story.author.username %}" style="color: #9ae6b8;">{{ story.author.username }}</a> • {{ story.created_at|date:"M d, Y" }}</p>
+            <p class="excerpt">{{ story.description|truncatechars:140 }}</p>
+        </div>
+        <p class="rating" style="color:#46c67c;">
+            {% with story.avg_rating|default:0 as rating %}
+    {% for i in "12345" %}
+        {% if forloop.counter <= rating %}
+            ★
+        {% else %}
+            ☆
+        {% endif %}
+    {% endfor %}
+{% endwith %}
+        </p>
+      </a>
+    </article>
+  {% empty %}
+    <p class="muted">No stories yet.</p>
+  {% endfor %}
+</div>
+
+<nav class="pagination" aria-label="Latest Stories Pagination" style="margin-top:18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    {% if latest_page_obj.has_previous %}
+      <a class="btn-ghost" href="?latest_page={{ latest_page_obj.previous_page_number }}">‹ Prev</a>
+    {% endif %}
+
+    {% for num in latest_paginator.page_range %}
+      {% if num == latest_page_obj.number %}
+        <span class="btn-primary" style="padding:6px 10px;border-radius:6px">{{ num }}</span>
+      {% else %}
+        <a class="btn-ghost" href="?latest_page={{ num }}">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if latest_page_obj.has_next %}
+      <a class="btn-ghost" href="?latest_page={{ latest_page_obj.next_page_number }}">Next ›</a>
+    {% endif %}
+</nav>
+</section>
+
+
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}Delete Contact Message — Dream Dimension{% endblock %}
+
+{% block content %}
+<section style="max-width:600px; margin:20px auto; padding:16px; background:rgba(0,0,0,0.4); border-radius:8px;">
+    <h2>Delete Message</h2>
+    <p>Are you sure you want to delete this message?</p>
+    <p style="background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:6px; color:white;">{{ contact.message }}</p>
+
+    <form method="post" style="margin-top:12px; display:flex; gap:8px;">
+        {% csrf_token %}
+        <button type="submit" class="btn-primary">Yes, Delete</button>
+        <a href="{% url 'contact' %}" class="btn-ghost">Cancel</a>
+    </form>
+</section>
+{% endblock %}

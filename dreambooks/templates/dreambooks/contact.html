@@ -1,0 +1,44 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}Contact Us — Dream Dimension{% endblock %}
+
+{% block content %}
+<section style="max-width:600px; margin:20px auto; padding:16px; background:rgba(0,0,0,0.4); border-radius:8px;">
+    <h2>Contact Us</h2>
+
+    <form method="post" style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
+        {% csrf_token %}
+        <textarea name="message" rows="4" placeholder="Your message..." style="padding:8px 10px; border-radius:6px; border:none; background:rgba(255,255,255,0.1); color:white;"></textarea>
+        <button type="submit" class="btn-primary" style="align-self:flex-start;">Send</button>
+    </form>
+
+    <h3 style="margin-bottom:8px;">Your Messages</h3>
+        {% if messages %}
+            {% if user.is_staff %}
+                <p style="font-size:0.85rem; color:var(--muted);">Showing all messages (admin view)</p>
+            {% endif %}
+            <ul style="list-style:none;padding:0;margin:0;">
+            {% for m in messages %}
+                <li style="margin-bottom:12px; background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:6px; position:relative;">
+                    <p style="margin:0; color:white;">
+                        {% if user.is_staff %}<strong>{{ m.user.username }}:</strong> {% endif %}
+                        {{ m.message }}
+                    </p>
+                    <small style="color:var(--muted);">{{ m.created_at|date:"M d, Y H:i" }}</small>
+                    {% if user.is_staff or user == m.user %}
+                    <div style="margin-top:4px; display:flex; gap:4px;">
+                        <a href="{% url 'contact_edit' m.pk %}" class="btn-ghost" style="padding:2px 6px;font-size:0.75rem;">Edit</a>
+                        <form action="{% url 'contact_delete' m.pk %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-ghost" style="padding:2px 6px;font-size:0.75rem;color:#ff6b6b;">Delete</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color:var(--muted)">No messages yet.</p>
+        {% endif %}
+
+</section>
+{% endblock %}

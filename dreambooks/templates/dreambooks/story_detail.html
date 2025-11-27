@@ -1,0 +1,253 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}{{ story.title }} - Dream Dimension{% endblock %}
+
+{% block content %}
+<style>
+/* brighter chapter list / clickable area */
+.chapter-list { margin: 0; padding: 0; }
+.chapter-item{
+  padding:12px;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.01);
+  border-radius:8px;
+  margin-bottom:8px;
+  transition: background .18s ease, box-shadow .18s ease, transform .08s ease;
+}
+.chapter-item:hover{
+  background: rgba(255,255,255,0.03);
+  box-shadow: 0 8px 20px rgba(15,60,30,0.04);
+  transform: translateY(-2px);
+}
+
+.chapter-row { gap: 12px; }
+
+/* make the title/meta area clickable */
+.chapter-link{
+  display:block;
+  text-decoration:none;
+  color:inherit;
+  flex:1;
+}
+.chapter-link:focus,
+.chapter-link:hover{ text-decoration:none; }
+
+.chapter-title{
+  color: #9ae6b8; /* slightly brighter green for titles */
+  display:block;
+  font-weight:600;
+}
+.chapter-meta{ color: var(--muted); font-size:0.9rem; }
+
+/* ensure the read button stays right-aligned */
+.chapter-row > div:last-child { margin-left:12px; }
+
+.reviews-list {
+    list-style: none; /* remove the default bullet */
+    padding: 0;
+    margin: 0;
+}
+
+.reviews-list li {
+    margin-bottom: 12px; /* spacing between reviews */
+}
+
+
+</style>
+<section class="story-detail">
+  <a href="{% url 'home' %}" class="btn-ghost" style="margin-bottom:12px;display:inline-block">← Return home</a>
+
+  <header style="display:flex;gap:16px;align-items:flex-start;margin-bottom:18px">
+    {% if story.cover_image %}
+        <img src="{{ story.cover_image.url }}" alt="{{ story.title }}" style="width:200px;height:auto;border-radius:8px;object-fit:cover">
+    {% endif %}
+
+    <div>
+        <h1 style="margin:0 0 8px">{{ story.title }}</h1>
+        <p class="meta" style="margin:0 0 8px">
+        by <a href="{% url 'profile' story.author.username %}" style="color: #9ae6b8;">{{ story.author.username }}</a> • {{ story.created_at|date:"M d, Y" }}
+        </p>
+
+        {% if story.genres.exists %}
+        <p style="margin:4px 0">
+            {% for g in story.genres.all %}
+            <span class="tag" style="background:#9ae6b8;color:#065f46;padding:2px 6px;border-radius:4px;margin-right:4px;font-size:0.85rem">{{ g.name }}</span>
+            {% endfor %}
+        </p>
+        {% endif %}
+        <br>
+        {% if user.is_authenticated and user == story.author or user.is_authenticated and user.is_staff %}
+        <p style="margin-top:10px; margin-bottom:25px;">
+            <a class="btn-primary" href="{% url 'chapter_create' story.slug %}">+ Add New Chapter</a>
+        </p>
+
+        <p>
+            <a class="btn-primary" href="{% url 'story_edit' story.slug %}">Edit Story</a>
+        </p>
+
+
+        {% endif %}
+
+    </div>
+    </header>
+
+    <!-- Story Average Rating -->
+<p class="rating" style="color:#46c67c; font-size:1.1rem; margin:4px 0;">
+    {% for i in "12345" %}
+        {% if forloop.counter <= story.avg_rating %}
+            ★
+        {% else %}
+            ☆
+        {% endif %}
+    {% endfor %}
+    <span style="font-size:0.85rem; color:var(--muted);">({{ story.real_avg_rating }})</span>
+</p>
+
+
+  <article class="story-description" style="margin-bottom:20px">
+    {{ story.description|linebreaks }}
+  </article>
+
+  <section class="story-chapters">
+    <h2 style="margin-top:0">Chapters</h2>
+    <ul class="chapter-list" style="list-style:none;padding:0;margin:0">
+      {% for chapter in chapters %}
+        {% url 'chapter_detail' story.slug chapter.pk as chapter_url %}
+        <li id="chapter-{{ chapter.pk }}" class="chapter-item">
+          <div class="chapter-row" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            {% if chapter_url %}
+              <a class="chapter-link" href="{{ chapter_url }}">
+            {% else %}
+              <a class="chapter-link" href="{% url 'story_detail' story.slug %}#chapter-{{ chapter.pk }}">
+            {% endif %}
+                <div>
+                  <strong class="chapter-title">{{ chapter.title }}</strong>
+                  <div class="muted chapter-meta" style="font-size:0.9rem">{{ chapter.created_at|date:"M d, Y" }}</div>
+                </div>
+              </a>
+              <div>
+                {% if user.is_authenticated and user == story.author or user.is_authenticated and user.is_staff %}
+                <div style="margin-top:6px; display:flex; gap:6px;">
+                    <a href="{% url 'chapter_edit' story.slug chapter.pk %}" class="btn-ghost" style="padding:4px 8px;font-size:0.8rem;">Edit</a>
+                    <form action="{% url 'chapter_delete' story.slug chapter.pk %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-ghost" style="padding:4px 8px;font-size:0.8rem;color:#ff6b6b;">Delete</button>
+                    </form>
+                </div>
+                {% endif %}
+              </div>
+            <div>
+              {% if chapter_url %}
+                <a class="btn-ghost" href="{{ chapter_url }}">Read</a>
+              {% else %}
+                <a class="btn-ghost" href="{% url 'story_detail' story.slug %}#chapter-{{ chapter.pk }}" style="color: #9ae6b8;">View</a>
+              {% endif %}
+            </div>
+          </div>
+        </li>
+      {% empty %}
+        <li class="muted">No chapters yet. {% if user.is_authenticated and user == story.author or user.is_authenticated and user.is_staff %}<a href="{% url 'chapter_create' story.slug %}" style="color:#9ae6b8;">Create the first chapter</a>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    <nav class="pagination" aria-label="Chapters pagination" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        {% if page_obj.has_previous %}
+        <a class="btn-ghost" href="?page={{ page_obj.previous_page_number }}">‹ Prev</a>
+        {% endif %}
+
+        {% for num in paginator.page_range %}
+        {% if num == page_obj.number %}
+            <span class="btn-primary" style="padding:6px 10px;border-radius:6px">{{ num }}</span>
+        {% else %}
+            <a class="btn-ghost" href="?page={{ num }}">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a class="btn-ghost" href="?page={{ page_obj.next_page_number }}">Next ›</a>
+        {% endif %}
+    </nav>
+  </section>
+</section>
+
+<section class="story-reviews" style="margin-top:30px;">
+  <h2 style="margin-bottom:12px">Reviews</h2>
+
+  {% if user.is_authenticated %}
+    {% if review_form %}
+        <form method="post" style="margin-bottom:20px; display:flex; flex-direction:column; gap:8px;">
+        {% csrf_token %}
+        <label for="id_rating">Your rating:</label>
+        <select name="rating" id="id_rating" style="padding:6px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.04); background:rgba(0,0,0,0.12); color:var(--text); max-width:120px;">
+            {% for i in "12345" %}
+            <option value="{{ i }}">{{ i }} ★</option>
+            {% endfor %}
+        </select>
+
+        <label for="id_comment">Your review:</label>
+        <textarea name="comment" id="id_comment" rows="3" style="padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:rgba(0,0,0,0.12); color:var(--text);"></textarea>
+
+        <button type="submit" class="btn-primary" style="align-self:flex-start;">Submit Review</button>
+        </form>
+    {% else %}
+        <p>You already reviewed this story.</p>
+    {% endif %}
+  {% else %}
+    <p><a href="{% url 'login' %}" style="color: #9ae6b8;">Log in</a> to write a review.</p>
+  {% endif %}
+
+  <ul class="reviews-list">
+    {% for review in reviews %}
+    <li style="background:var(--card); padding:12px; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,0.3);">
+
+        <!-- Header: avatar + username + rating -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+
+            <!-- Avatar + Username -->
+            <a href="{% url 'profile' review.author.username %}" class="account-link" style="gap:8px;">
+                <span class="avatar" aria-hidden="true">{{ review.author.username|first|upper }}</span>
+                <strong style="color:var(--accent-2);">{{ review.author.username }}</strong>
+            </a>
+
+
+            <!-- Rating -->
+            <span style="color:#46c67c; font-size:1.1rem;">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= review.rating %}
+                        ★
+                    {% else %}
+                        ☆
+                    {% endif %}
+                {% endfor %}
+            </span>
+        </div>
+
+        <!-- Review Text -->
+        <p style="margin:0 0 6px;">{{ review.comment }}</p>
+
+        <!-- Date -->
+        <small style="color:var(--muted); font-size:0.85rem;">
+            {{ review.created_at|date:"M d, Y" }}
+        </small>
+
+        <!-- Edit/Delete -->
+        {% if user.is_authenticated %}
+        <div style="margin-top:6px; display:flex; gap:8px;">
+            {% if user == review.author %}
+            <a href="{% url 'review_edit' review.id %}" class="btn-ghost" style="padding:4px 8px;font-size:0.8rem;">Edit</a>
+            {% endif %}
+            {% if user == review.author or user.is_staff %}
+            <a href="{% url 'review_delete' review.id %}" class="btn-ghost" style="padding:4px 8px;font-size:0.8rem;color:#ff6b6b;">Delete</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </li>
+    <br>
+    {% empty %}
+    <li style="color:var(--muted)">No reviews yet. Be the first to write one!</li>
+    {% endfor %}
+</ul>
+
+
+</section>
+
+{% endblock %}

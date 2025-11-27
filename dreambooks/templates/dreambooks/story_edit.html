@@ -1,0 +1,101 @@
+{% extends "dreambooks/base.html" %}
+{% block title %}Create story — Dream Dimension{% endblock %}
+
+{% block content %}
+<style>
+/* page-local genres styles (keeps form card compact) */
+.genres-wrap{
+  max-height:140px;
+  overflow:auto;
+  padding:8px;
+  border-radius:8px;
+  background:rgba(255,255,255,0.01);
+  border:1px solid rgba(255,255,255,0.02);
+  position:relative;
+}
+.genres-wrap::after{
+  content:"";
+  pointer-events:none;
+  position:sticky;
+  bottom:0;
+  height:36px;
+  margin-top:-36px;
+  background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.28));
+}
+.genres-wrap.expanded{ max-height:none; padding-bottom:6px }
+.genres-wrap.expanded::after{ display:none }
+
+.genres-toggle{
+  margin-top:8px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.04);
+  color:var(--muted);
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:0.9rem;
+}
+.genres-toggle:hover{ color:var(--text); background:rgba(255,255,255,0.02) }
+
+@media (max-width:520px){ .genres-wrap{ max-height:120px } }
+</style>
+
+<section class="auth-section">
+  <div class="auth-card">
+    <header class="auth-header">
+      <h2>Edit story</h2>
+      <p class="muted">Update your book details.</p>
+    </header>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% for field in form.visible_fields %}
+        {% if field.name == "genres" %}
+          <div class="form-row{% if field.errors %} has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <div class="genres-wrap" id="genresWrap">
+              {{ field }}
+            </div>
+            <button type="button" class="genres-toggle" id="genresToggle" aria-expanded="false">Show more</button>
+            {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
+            {% for err in field.errors %}<p class="field-error">{{ err }}</p>{% endfor %}
+          </div>
+        {% else %}
+          <div class="form-row{% if field.errors %} has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
+            {% for err in field.errors %}<p class="field-error">{{ err }}</p>{% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+        <div class="form-actions">
+            <button class="btn-primary" type="submit">
+                {% if story %}Update story{% else %}Create story{% endif %}
+            </button>
+            
+            {% if story %}
+                <a class="btn-ghost" href="{% url 'story_detail' story.slug %}">Cancel</a>
+            {% else %}
+                <a class="btn-ghost" href="{% url 'home' %}">Cancel</a>
+            {% endif %}
+        </div>
+
+    </form>
+  </div>
+</section>
+
+<script>
+(() => {
+  const wrap = document.getElementById('genresWrap');
+  const btn = document.getElementById('genresToggle');
+  if (!wrap || !btn) return;
+  btn.addEventListener('click', () => {
+    const expanded = wrap.classList.toggle('expanded');
+    btn.textContent = expanded ? 'Show less' : 'Show more';
+    btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  });
+})();
+</script>
+{% endblock %}
